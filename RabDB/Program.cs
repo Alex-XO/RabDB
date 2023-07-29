@@ -10,40 +10,9 @@ namespace RabDB
             MyDatabase db = new MyDatabase();
             db.ConnectDB();
             Console.WriteLine("Вы хотите создать, редактировать, найти или удалить пользователя/всех из БД?");
-            string answer = Console.ReadLine();
+            string answer = Console.ReadLine().ToLower();
 
-
-            if (answer.ToLower() == "создать")
-            {
-                int idPers = int.Parse(AskUser("Введите id: "));
-                string namePers = AskUser("Введите name: ");
-                db.Create(idPers, namePers);
-                db.ShowUsers();
-            }
-            else if (answer.ToLower() == "найти")
-            {
-                string name = AskUser("Введите name: ");
-                db.FindByName(name);
-            }
-            else if (answer.ToLower() == "удалить")
-            {
-                db.ShowUsers();
-                int idPers = int.Parse(AskUser("Введите id: "));
-                db.Delete(idPers);
-                db.ShowUsers();
-            }
-            else if (answer.ToLower() == "удалить всех")
-            {
-                db.DeleteAll();
-            }
-            else if (answer.ToLower() == "редактировать")
-            {
-                db.ShowUsers();
-                string name = AskUser("Введите name, кого хотите отредактировать: ");
-                string newName = AskUser("Введите новый name: ");
-                db.Edit(name, newName);
-                db.ShowUsers();
-            }
+            ExecuteCommand(answer, db);
 
             db.ConnectionClose();
         }
@@ -52,6 +21,48 @@ namespace RabDB
         {
             Console.Write(text);
             return Console.ReadLine();
+        }
+
+        static void ExecuteCommand(string command, MyDatabase db)
+        {
+            if (command == "создать")
+            {
+                int idPers = int.Parse(AskUser("Введите id: "));
+                string namePers = AskUser("Введите name: ");
+                db.Create(idPers, namePers);
+                db.ShowUsers();
+                return;
+            }
+            if (command == "найти")
+            {
+                string name = AskUser("Введите name: ");
+                db.FindByName(name);
+                return;
+            }
+            if (command == "удалить")
+            {
+                db.ShowUsers();
+                int idPers = int.Parse(AskUser("Введите id: "));
+                db.Delete(idPers);
+                db.ShowUsers();
+                return;
+            }
+            if (command == "удалить всех")
+            {
+                db.DeleteAll();
+                return;
+            }
+            if (command == "редактировать")
+            {
+                db.ShowUsers();
+                string name = AskUser("Введите name, кого хотите отредактировать: ");
+                string newName = AskUser("Введите новый name: ");
+                db.Edit(name, newName);
+                db.ShowUsers();
+                return;
+            }
+
+            Console.WriteLine("Команда: " + command + " не найдена");
         }
     }
 
