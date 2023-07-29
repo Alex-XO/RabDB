@@ -9,23 +9,43 @@ namespace RabDB
         {
             MyDatabase db = new MyDatabase();
             db.ConnectDB();
-            Console.WriteLine("Вы хотите создать или удалить пользователя БД?");
+            Console.WriteLine("Вы хотите создать, редактировать, найти или удалить пользователя/всех из БД?");
             string answer = Console.ReadLine();
 
-            if (answer.ToLower() == "да")
+
+            if (answer.ToLower() == "создать")
             {
                 int idPers = int.Parse(AskUser("Введите id: "));
                 string namePers = AskUser("Введите name: ");
                 db.Create(idPers, namePers);
+                db.ShowUsers();
             }
-            else if (answer.ToLower() == "нет")
+            else if (answer.ToLower() == "найти")
             {
+                string name = AskUser("Введите name: ");
+                db.FindByName(name);
+            }
+            else if (answer.ToLower() == "удалить")
+            {
+                db.ShowUsers();
                 int idPers = int.Parse(AskUser("Введите id: "));
                 db.Delete(idPers);
+                db.ShowUsers();
+            }
+            else if (answer.ToLower() == "удалить всех")
+            {
+                db.DeleteAll();
+            }
+            else if (answer.ToLower() == "редактировать")
+            {
+                db.ShowUsers();
+                string name = AskUser("Введите name, кого хотите отредактировать: ");
+                string newName = AskUser("Введите новый name: ");
+                db.Edit(name, newName);
+                db.ShowUsers();
             }
 
-
-            db.ShowUsers();
+            db.ConnectionClose();
         }
 
         static string AskUser(string text)
@@ -39,7 +59,7 @@ namespace RabDB
     {
         private SqlConnection connection;
         private String connectionString = "Server=localhost;Database=My_Database;Trusted_Connection=True;Encrypt=False;";
-        public void ConnectDB() 
+        public void ConnectDB()
         {
             connection = new SqlConnection(connectionString);
             connection.Open();
@@ -62,25 +82,52 @@ namespace RabDB
 
         public void Create(int id, string name)
         {
-            using (var conn = new SqlConnection(connectionString))
-            {
-                var cmd = new SqlCommand("insert into users values (@id,@name)", conn); 
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.Parameters.AddWithValue("@name", name);
-                conn.Open();
-                cmd.ExecuteNonQuery();
-            }
+            var cmd = new SqlCommand("insert into users values (@id,@name)", connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.ExecuteNonQuery();
         }
 
         public void Delete(int id)
         {
-            using (var conn = new SqlConnection(connectionString))
+
+            var cmd = new SqlCommand("DELETE FROM users WHERE id = @id", connection);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+
+        }
+
+        public void FindByName(string name)
+        {
+            var cmd = new SqlCommand("SELECT * FROM users WHERE name = @name", connection);
+            cmd.Parameters.AddWithValue("@name", name + '%');
+
+            using (SqlDataReader reader = cmd.ExecuteReader())
             {
-                var cmd = new SqlCommand("DELETE FROM users WHERE id = @id", conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                conn.Open();
-                cmd.ExecuteNonQuery();
+                while (reader.Read())
+                {
+                    Console.WriteLine("{0} \t {1}", reader[0], reader[1]);
+                }
             }
+        }
+
+        public void DeleteAll()
+        {
+            var cmd = new SqlCommand("DELETE FROM users", connection);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void Edit(string name, string newName)
+        {
+            var cmd = new SqlCommand("UPDATE users SET name = @newName WHERE name = @name", connection);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@newName", newName);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void ConnectionClose()
+        {
+            connection.Close();
         }
     }
 }
